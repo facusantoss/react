@@ -1,10 +1,28 @@
 import React from 'react'
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import Productos from '../../Json/Productos.json';
+import ItemList from '../ItemList/ItemList';
 
-const ItemListContainer = ({greeting, img}) =>{
+const ItemListContainer = () =>{
+ const [item, setItem] = useState([])
+ const  {id}= useParams();
+
+ useEffect(()=>{
+    const promesa= new Promise((resolve)=>{
+        setTimeout(()=>{
+            resolve(id ? Productos.filter(item=> item.category === id) : Productos)
+        }, 1000)
+    });
+    promesa.then((data)=>{
+        setItem(data)
+    }, [id])
+
+ }, [])
+
     return (
         <div>
-        <h3>{greeting}</h3>
-        <img src= {img} width="700px" height= "300px" alt="nombre"/>
+        <ItemList item={item}/>
         </div>
     )
 }
