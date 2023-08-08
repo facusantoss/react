@@ -1,13 +1,19 @@
 import React from 'react'
 import { BsFillCartDashFill } from "react-icons/bs";
+import { Link } from 'react-router-dom';
+import { CartContext } from '../Context/CartContext';
+import { useContext } from 'react';
 
 const CartWidget = () => {
+  const { getQuantity } = useContext(CartContext)
     return (
         <div>
+          <Link to="/cart">
           <BsFillCartDashFill/> 
-          <spam>0</spam> 
+          <button>{getQuantity()}</button>
+          </Link>
         </div>
     )
 }
 
-export default CartWidget
+export default CartWidget;
