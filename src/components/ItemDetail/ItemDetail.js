@@ -1,19 +1,35 @@
 import Card from 'react-bootstrap/Card';
-import ItemCount from '../ItemCount/ItemCount'
+import ItemCount from '../ItemCount/ItemCount';
 import { CartContext } from '../Context/CartContext';
-import {useState, useContext } from 'react'
+import {useState, useContext, useEffect } from 'react'
+import { getFirestore, collection, getDocs } from 'firebase/firestore';
 
 const ItemDetail = ({ item }) => {
   const { addItem } = useContext(CartContext);
-  const [stock, setStock] = useState(parseInt(item.stock));
+  const [stock, setStock] = useState(item.stock);
 
-  const handleOnAdd = (count) => {
-    
-    const newStock = stock - count;
-    
+  useEffect(() => {
+    const fetchItem = async () => {
+      const db = getFirestore();
+      const productsCollection = collection(db, 'products');
+      const querySnapshot = await getDocs(productsCollection);
+
+      querySnapshot.forEach((doc) => {
+        if (doc.id === item.id) {
+          const data = doc.data();
+          setStock(data.stock);
+        }
+      });
+    };
+
+    fetchItem();
+  }, [item.id]);
+
+  const handleOnAdd = (counter) => {
+    const newStock = stock - counter;
     setStock(newStock);
 
-    addItem({ id: item.id, price: item.price, name: item.name, img: item.img }, count);
+    addItem({ id: item.id, price: item.price, name: item.name, img: item.img }, counter);
   };
 
    

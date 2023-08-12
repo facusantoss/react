@@ -4,15 +4,14 @@ import { CartContext } from '../Context/CartContext';
 import swal from 'sweetalert';
 
 export const Checkout = () => {
-  const [orderId, setOrderId] = useState();
   const [buyer, setBuyer] = useState({
     fullName: '',
     email: '',
     repeatEmail: '',
     phone: '',
   });
-  const { fullName, email, repeatEmail, phone } = buyer;
 
+  const { fullName, email, repeatEmail, phone } = buyer;
   const { cart } = useContext(CartContext);
 
   const handleChange = (e) => {
@@ -22,24 +21,42 @@ export const Checkout = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const total = cart.reduce((acum, Item) => acum + Item.price * Item.stock, 0);
+
+    if (email !== repeatEmail) {
+      swal('Error', 'Los emails no coinciden', 'error');
+      return;
+    }
+
+    if (!/^\d+$/.test(phone)) {
+      swal('Error', 'El teléfono solo debe contener números', 'error');
+      return;
+    }
+
+    const total = cart.reduce((acum, item) => acum + (item.price * item.quantity), 0);
     const date = new Date();
-    const data = { fullName, email, phone, cart, total, date };
-    generateOrder(data);
+    const data = { buyer, cart, total, date };
+
+    try {
+      const orderId = await generateOrder(data);
+      swal("Felicitaciones, tu compra se realizó con éxito", `Tu ID de Compra es: ${orderId}`, "success");
+    } catch (error) {
+      swal("Error", "Hubo un problema al generar la orden", "error");
+    }
   };
 
   const generateOrder = async (data) => {
     const querydb = getFirestore();
     const queryCollection = collection(querydb, 'Orders');
     const order = await addDoc(queryCollection, data);
-    setOrderId(order.id);
+    return order.id; // Devolvemos el ID del pedido
   };
+  
 
   return (
     <div>
-      <h2>Checkout</h2>
+      <h2>Formulario</h2>
       <form onSubmit={handleSubmit}>
         <div>
           <label>
@@ -85,14 +102,12 @@ export const Checkout = () => {
               name="phone"
               value={phone}
               onChange={handleChange}
+              pattern="[0-9]*"
               required
             />
           </label>
         </div>
         <button type="submit">Enviar</button>
-        {orderId && <>
-          swal ("Felicitaciones tu compra se realizo con exito", "Tu ID de Compra es: {orderId}", "success");
-            </>}
       </form>
     </div>
   );
